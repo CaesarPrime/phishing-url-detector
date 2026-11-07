@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center mb-4">
+  <h1 class="h3"><i class="bi bi-shield-check text-success"></i> Intelligent Phishing URL Detection System</h1>
+  <p class="text-muted">Hybrid detection: optimized XGBoost classifier + cybersecurity rule engine</p>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-success text-white"><i class="bi bi-search"></i> Phishing URL Scanner</div>
+  <div class="card-body">
+    <form method="post" class="row g-2">
+      <div class="col-md-10">
+        <input class="form-control form-control-lg" name="url" value="{{ submitted }}" placeholder="https://example.com" required>
+      </div>
+      <div class="col-md-2 d-grid">
+        <button class="btn btn-success btn-lg" type="submit"><i class="bi bi-shield-shaded"></i> Scan URL</button>
+      </div>
+    </form>
+    <p class="small text-muted mt-2 mb-0">The website is never opened — only the text of the address is analysed.</p>
+  </div>
+</div>
+
+{% if result %}
+{% set danger = result.label == 'DANGER' %}
+<div class="card shadow-sm mb-4 border-{{ 'danger' if danger else 'success' }}">
+  <div class="card-header fw-semibold">Scan Result</div>
+  <div class="card-body">
+    <div class="alert alert-{{ 'danger' if danger else 'success' }} mb-3">
+      <h2 class="h4 mb-1">
+        {% if danger %}<i class="bi bi-exclamation-octagon"></i> DANGER — likely phishing website
+        {% else %}<i class="bi bi-check-circle"></i> SAFE — website appears legitimate{% endif %}
+      </h2>
+      <div class="small text-break">{{ result.url }}</div>
+      {% if result.rule_override %}
+        <div class="small mt-1"><i class="bi bi-info-circle"></i> The cybersecurity rule engine overrode the machine learning prediction.</div>
+      {% endif %}
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-4">
+        <div class="border rounded p-3 h-100">
+          <div class="text-muted small">Model confidence</div>
+          <div class="fs-4 fw-semibold">{{ '%.2f' % (result.confidence * 100) }}%</div>
+          <div class="progress" style="height:6px"><div class="progress-bar bg-{{ 'danger' if danger else 'success' }}" style="width: {{ result.confidence * 100 }}%"></div></div>
+          <div class="small text-muted mt-1">ML prediction: {{ 'Phishing' if result.ml_prediction == 1 else 'Legitimate' }}</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="border rounded p-3 h-100">
+          <div class="text-muted small">Risk level</div>
+          {% set rc = {'HIGH': 'danger', 'MEDIUM': 'warning', 'LOW': 'success'}[result.risk_level] %}
+          <div class="fs-4"><span class="badge bg-{{ rc }}">{{ result.risk_level }}</span></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="border rounded p-3 h-100">
+          <div class="text-muted small">Rule engine score</div>
+          <div class="fs-4 fw-semibold">{{ result.risk_score }}</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="h6">Security indicators</h3>
+    {% if result.triggered_rules %}
+      <ul class="list-group mb-3">
+        {% for rule in result.triggered_rules %}
+          <li class="list-group-item list-group-item-warning"><i class="bi bi-exclamation-triangle"></i> {{ rule }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-success"><i class="bi bi-check2"></i> No suspicious characteristics detected by the rule engine.</p>
+    {% endif %}
+
+    <details>
+      <summary class="small">Extracted URL features</summary>
+      <table class="table table-sm table-bordered mt-2 small">
+        <thead class="table-light"><tr><th>Feature</th><th>Value</th></tr></thead>
+        <tbody>
+          {% for name, value in result.features.items() %}
+            <tr><td>{{ name }}</td><td>{{ value }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </details>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

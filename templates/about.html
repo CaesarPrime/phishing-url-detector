@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}About · Phishing URL Detector{% endblock %}
+{% block content %}
+<h1 class="h4"><i class="bi bi-info-circle"></i> About the System</h1>
+<p>This system detects phishing website addresses by combining an optimized XGBoost machine learning
+classifier, trained on eleven lexical URL features, with a cybersecurity rule engine.</p>
+
+{% if model_error %}
+  <div class="alert alert-danger">{{ model_error }}</div>
+{% elif meta %}
+<h2 class="h6 mt-4">Trained model</h2>
+<table class="table table-sm table-bordered w-auto">
+  <tbody>
+    {% for key in ['Algorithm', 'Training Date', 'Dataset Size', 'Training Samples', 'Testing Samples', 'Number of Features', 'Accuracy', 'Precision', 'Recall', 'F1 Score', 'ROC AUC'] %}
+      {% if key in meta %}<tr><th>{{ key }}</th><td>{{ meta[key] }}</td></tr>{% endif %}
+    {% endfor %}
+    {% if meta['Best Parameters'] %}<tr><th>Best Parameters</th><td>{{ meta['Best Parameters'] }}</td></tr>{% endif %}
+  </tbody>
+</table>
+<p class="small text-muted">Precision, recall and F1-score are reported for the phishing class.</p>
+{% endif %}
+{% endblock %}
