@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phishing URL Detector · Prototype</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+  body { background:#f4f6f8; }
+  .card { border-radius:.6rem; }
+  .text-break { word-break:break-all; }
+  .view { display:none; }
+  .view.active { display:block; }
+  details summary { cursor:pointer; }
+</style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+<nav class="navbar navbar-expand-md navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand fw-semibold" href="#" data-go="scanner"><i class="bi bi-shield-lock"></i> Phishing URL Detector</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="nav">
+      <ul class="navbar-nav ms-auto" id="navAuth">
+        <li class="nav-item"><a class="nav-link" href="#" data-go="scanner">Scanner</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" data-go="history">History</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" data-go="about">About</a></li>
+        <li class="nav-item"><span class="nav-link text-secondary"><i class="bi bi-person-circle"></i> <span id="navUser"></span></span></li>
+        <li class="nav-item"><a class="nav-link" href="#" id="logoutLink">Logout</a></li>
+      </ul>
+      <ul class="navbar-nav ms-auto" id="navGuest">
+        <li class="nav-item"><a class="nav-link" href="#" data-go="login">Login</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" data-go="register">Register</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-4 flex-grow-1">
+  <div id="flash"></div>
+
+  <!-- LOGIN -->
+  <section class="view" id="view-login">
+    <div class="row justify-content-center"><div class="col-md-5 col-lg-4">
+      <div class="card shadow-sm"><div class="card-body p-4">
+        <div class="text-center mb-3">
+          <i class="bi bi-shield-lock display-5 text-success"></i>
+          <h1 class="h4 mt-2">User Login</h1>
+          <p class="text-muted small">Sign in to scan website addresses</p>
+        </div>
+        <form id="loginForm" novalidate>
+          <div class="mb-3"><label class="form-label" for="lu">Username</label><input class="form-control" id="lu" autocomplete="username"></div>
+          <div class="mb-3"><label class="form-label" for="lp">Password</label><input class="form-control" id="lp" type="password" autocomplete="current-password"></div>
+          <button class="btn btn-success w-100" type="submit">Login</button>
+        </form>
+        <p class="text-center small mt-3 mb-0">No account? <a href="#" data-go="register">Register here</a></p>
+      </div></div>
+    </div></div>
+  </section>
+
+  <!-- REGISTER -->
+  <section class="view" id="view-register">
+    <div class="row justify-content-center"><div class="col-md-5 col-lg-4">
+      <div class="card shadow-sm"><div class="card-body p-4">
+        <div class="text-center mb-3">
+          <i class="bi bi-person-plus display-5 text-primary"></i>
+          <h1 class="h4 mt-2">Create Account</h1>
+        </div>
+        <form id="registerForm" novalidate>
+          <div class="mb-3"><label class="form-label" for="ru">Username</label><input class="form-control" id="ru" autocomplete="username">
+            <div class="form-text">3–30 characters: letters, numbers, ".", "_" or "-".</div></div>
+          <div class="mb-3"><label class="form-label" for="rp">Password</label><input class="form-control" id="rp" type="password" autocomplete="new-password"></div>
+          <div class="mb-3"><label class="form-label" for="rc">Confirm password</label><input class="form-control" id="rc" type="password" autocomplete="new-password"></div>
+          <button class="btn btn-primary w-100" type="submit">Register</button>
+        </form>
+        <p class="text-center small mt-3 mb-0">Already registered? <a href="#" data-go="login">Login</a></p>
+      </div></div>
+    </div></div>
+  </section>
+
+  <!-- SCANNER -->
+  <section class="view" id="view-scanner">
+    <div class="text-center mb-4">
+      <h1 class="h3"><i class="bi bi-shield-check text-success"></i> Intelligent Phishing URL Detection System</h1>
+      <p class="text-muted">Hybrid detection: machine learning + cybersecurity rule engine</p>
+    </div>
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-success text-white"><i class="bi bi-search"></i> Phishing URL Scanner</div>
+      <div class="card-body">
+        <form id="scanForm" class="row g-2">
+          <div class="col-md-10"><input class="form-control form-control-lg" id="urlInput" placeholder="https://example.com"></div>
+          <div class="col-md-2 d-grid"><button class="btn btn-success btn-lg" type="submit"><i class="bi bi-shield-shaded"></i> Scan URL</button></div>
+        </form>
+        <p class="small text-muted mt-2 mb-0">The website is never opened — only the text of the address is analysed.
+          Try: <a href="#" class="sample">https://www.google.com</a> ·
+          <a href="#" class="sample">http://123.45.67.89/login</a> ·
+          <a href="#" class="sample">http://paypal.com@10.2.3.4/signin</a> ·
+          <a href="#" class="sample">http://secure-login-verify-account.bank-update.example.com/confirm?id=7&amp;session=abc</a></p>
+      </div>
+    </div>
+    <div id="result"></div>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="view" id="view-history">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h4 mb-0"><i class="bi bi-clock-history"></i> Scan History</h1>
+      <div>
+        <button class="btn btn-outline-danger btn-sm" id="clearHistory"><i class="bi bi-trash"></i> Clear</button>
+        <a class="btn btn-success btn-sm" href="#" data-go="scanner"><i class="bi bi-arrow-left"></i> Back to Scanner</a>
+      </div>
+    </div>
+    <div id="historyBody"></div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="view" id="view-about">
+    <h1 class="h4"><i class="bi bi-info-circle"></i> About this Prototype</h1>
+    <p>This is a browser prototype of the <strong>Intelligent Hybrid Phishing Uniform Resource Locator Detection
+      System Using Machine Learning and Cybersecurity Rules</strong>.</p>
+    <ul>
+      <li>It extracts the same <strong>eleven lexical URL features</strong> as the full system.</li>
+      <li>It applies the same <strong>six weighted cybersecurity rules</strong> and risk levels.</li>
+      <li>It adds a <strong>lexical risk estimate</strong> for the score shown as "model estimate".</li>
+    </ul>
+    <div class="alert alert-info small">
+      <strong>Prototype note:</strong> the trained XGBoost model runs in the full Python/Flask application
+      (see the GitHub repository). In this webpage prototype, accounts and scan history are stored only in
+      this browser.
+    </div>
+    <h2 class="h6 mt-4">Cybersecurity rules</h2>
+    <table class="table table-sm table-bordered w-auto">
+      <thead class="table-light"><tr><th>Indicator</th><th>Condition</th><th>Weight</th></tr></thead>
+      <tbody>
+        <tr><td>Numeric IP address</td><td>host is an IP address</td><td>50</td></tr>
+        <tr><td>"@" character</td><td>"@" in URL</td><td>40</td></tr>
+        <tr><td>Long URL</td><td>more than 75 characters</td><td>20</td></tr>
+        <tr><td>Too many subdomains</td><td>5 or more dots</td><td>20</td></tr>
+        <tr><td>Multiple hyphens</td><td>3 or more hyphens</td><td>15</td></tr>
+        <tr><td>No HTTPS</td><td>scheme is not https</td><td>10</td></tr>
+      </tbody>
+    </table>
+    <p class="small text-muted">Risk level: 0–19 LOW, 20–49 MEDIUM, 50 and above HIGH.</p>
+  </section>
+</main>
+
+<footer class="bg-dark text-secondary text-center small py-3">
+  Intelligent Hybrid Phishing URL Detection System &middot; Prototype
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+"use strict";
+/* ---------------- storage (wrapped so the page still works if storage is blocked) ---------------- */
+const mem = {};
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return k in mem ? mem[k] : d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { mem[k] = v; } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) { delete mem[k]; } }
+};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+async function hash(text) {
+  try {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+  } catch (e) { return btoa(unescape(encodeURIComponent(text))); }
+}
+
+/* ---------------- feature extraction (same 11 features as the Python system) ---------------- */
+const FEATURES = ["url_length", "qty_dot", "qty_hyphen", "qty_underline", "qty_slash", "qty_question",
+                  "qty_equal", "qty_at", "qty_dot_domain", "is_ip", "is_https"];
+const count = (s, ch) => s.split(ch).length - 1;
+
+function hostOf(url) {
+  const m = url.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/([^/?#]*)/);
+  let host = m ? m[1] : url.split("/")[0];
+  host = host.split("@").pop();
+  if (host.startsWith("[")) return host.split("]")[0] + "]";
+  return host.split(":")[0].toLowerCase();
+}
+function isIp(host) {
+  const h = host.replace(/^\[|\]$/g, "");
+  if (/^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/.test(h)) return 1;
+  if (h.includes(":") && /^[0-9a-f:.]+$/i.test(h)) return 1;
+  return 0;
+}
+function extractFeatures(url) {
+  const host = hostOf(url);
+  return {
+    url_length: url.length, qty_dot: count(url, "."), qty_hyphen: count(url, "-"),
+    qty_underline: count(url, "_"), qty_slash: count(url, "/"), qty_question: count(url, "?"),
+    qty_equal: count(url, "="), qty_at: count(url, "@"), qty_dot_domain: count(host, "."),
+    is_ip: isIp(host), is_https: /^https:\/\//i.test(url) ? 1 : 0
+  };
+}
+
+/* ---------------- URL normalization / validation ---------------- */
+function normalizeUrl(u) {
+  u = (u || "").trim();
+  if (u && !/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(u)) u = "http://" + u;
+  return u;
+}
+function isValidUrl(u) {
+  if (!u || u.length > 2048 || /\s/.test(u)) return false;
+  if (!/^https?:\/\/[^/?#]+/i.test(u)) return false;
+  const host = hostOf(u);
+  return !!(isIp(host) || host === "localhost" || /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(host));
+}
+
+/* ---------------- cybersecurity rule engine (same rules and weights) ---------------- */
+const RULES = [
+  [f => f.is_ip === 1, 50, "Numeric IP address used instead of a domain name."],
+  [f => f.qty_at > 0, 40, "URL contains the '@' character."],
+  [f => f.url_length > 75, 20, "Excessively long URL (more than 75 characters)."],
+  [f => f.qty_dot >= 5, 20, "Too many dots / subdomains in the URL."],
+  [f => f.qty_hyphen >= 3, 15, "Multiple hyphens detected."],
+  [f => f.is_https === 0, 10, "Website is not using HTTPS."]
+];
+function evaluateRules(f) {
+  let score = 0; const triggered = [];
+  for (const [test, w, msg] of RULES) if (test(f)) { score += w; triggered.push(msg); }
+  return { score, triggered };
+}
+const riskLevel = s => s >= 50 ? "HIGH" : s >= 20 ? "MEDIUM" : "LOW";
+
+/* ---------------- lexical risk estimate (prototype stand-in for the XGBoost model) ----------------
+   A simple logistic score over the lexical features. It is NOT the trained XGBoost model;
+   it only lets the prototype show a probability-style estimate in the browser. */
+function lexicalEstimate(f) {
+  const z = -2.4 + 0.025 * Math.max(0, f.url_length - 30) + 0.45 * Math.max(0, f.qty_dot - 2)
+          + 0.55 * f.qty_hyphen + 0.35 * f.qty_underline + 0.12 * Math.max(0, f.qty_slash - 3)
+          + 0.6 * f.qty_question + 0.4 * f.qty_equal + 2.5 * f.qty_at
+          + 0.5 * Math.max(0, f.qty_dot_domain - 2) + 3.0 * f.is_ip - 1.6 * f.is_https;
+  return 1 / (1 + Math.exp(-z));          // probability of phishing
+}
+
+/* ---------------- hybrid decision (same thresholds as the Python system) ---------------- */
+function analyze(url) {
+  const features = extractFeatures(url);
+  const pPhish = lexicalEstimate(features);
+  const mlPrediction = pPhish >= 0.5 ? 1 : 0;
+  const confidence = mlPrediction ? pPhish : 1 - pPhish;
+  const { score, triggered } = evaluateRules(features);
+  let final = mlPrediction;
+  if (score >= 50) final = 1;
+  else if (score >= 30 && confidence < 0.995) final = 1;
+  return { url, features, mlPrediction, confidence, prediction: final,
+           label: final ? "DANGER" : "SAFE", ruleOverride: final !== mlPrediction,
+           riskScore: score, riskLevel: riskLevel(score), triggered };
+}
+
+/* ---------------- UI helpers ---------------- */
+function flash(msg, type) {
+  document.getElementById("flash").innerHTML =
+    `<div class="alert alert-${type} alert-dismissible fade show">${esc(msg)}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+}
+function clearFlash() { document.getElementById("flash").innerHTML = ""; }
+const currentUser = () => store.get("pd_current", null);
+
+function show(view) {
+  const user = currentUser();
+  if (!user && ["scanner", "history", "about"].includes(view)) {
+    view = "login";
+    flash("Please log in to use the phishing URL scanner.", "warning");
+  }
+  if (user && ["login", "register"].includes(view)) view = "scanner";
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.getElementById("view-" + view).classList.add("active");
+  document.getElementById("navAuth").style.display = user ? "" : "none";
+  document.getElementById("navGuest").style.display = user ? "none" : "";
+  document.getElementById("navUser").textContent = user || "";
+  if (view === "history") renderHistory();
+}
+document.addEventListener("click", e => {
+  const go = e.target.closest("[data-go]");
+  if (go) { e.preventDefault(); clearFlash(); show(go.dataset.go); }
+  const sample = e.target.closest(".sample");
+  if (sample) { e.preventDefault(); document.getElementById("urlInput").value = sample.textContent; document.getElementById("scanForm").requestSubmit(); }
+});
+
+/* ---------------- auth ---------------- */
+document.getElementById("registerForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const u = document.getElementById("ru").value.trim();
+  const p = document.getElementById("rp").value, c = document.getElementById("rc").value;
+  const users = store.get("pd_users", {});
+  if (!/^[A-Za-z0-9_.-]{3,30}$/.test(u)) return flash("Username must be 3-30 characters: letters, numbers, '.', '_' or '-'.", "danger");
+  if (p.length < 6) return flash("Password must be at least 6 characters.", "danger");
+  if (p !== c) return flash("Passwords do not match.", "danger");
+  if (users[u]) return flash("That username is already taken.", "danger");
+  users[u] = await hash(u + ":" + p);
+  store.set("pd_users", users);
+  e.target.reset();
+  show("login");
+  flash("Account created. You can now log in.", "success");
+});
+document.getElementById("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const u = document.getElementById("lu").value.trim(), p = document.getElementById("lp").value;
+  const users = store.get("pd_users", {});
+  if (users[u] && users[u] === await hash(u + ":" + p)) {
+    store.set("pd_current", u); e.target.reset(); clearFlash(); show("scanner");
+  } else flash("Invalid username or password.", "danger");
+});
+document.getElementById("logoutLink").addEventListener("click", e => {
+  e.preventDefault(); store.del("pd_current"); document.getElementById("result").innerHTML = "";
+  show("login"); flash("You have been logged out.", "info");
+});
+
+/* ---------------- scanning ---------------- */
+document.getElementById("scanForm").addEventListener("submit", e => {
+  e.preventDefault(); clearFlash();
+  const raw = document.getElementById("urlInput").value;
+  const out = document.getElementById("result");
+  if (!raw.trim()) { out.innerHTML = ""; return flash("Please enter a URL.", "danger"); }
+  const url = normalizeUrl(raw);
+  if (!isValidUrl(url)) { out.innerHTML = ""; return flash("Please enter a valid web address, e.g. https://www.example.com", "danger"); }
+  const r = analyze(url);
+
+  const all = store.get("pd_history", {}); const user = currentUser();
+  (all[user] = all[user] || []).unshift({ url: r.url, label: r.label, confidence: r.confidence,
+    risk: r.riskLevel, score: r.riskScore, date: new Date().toISOString() });
+  all[user] = all[user].slice(0, 100);
+  store.set("pd_history", all);
+
+  const danger = r.label === "DANGER";
+  const rc = { HIGH: "danger", MEDIUM: "warning", LOW: "success" }[r.riskLevel];
+  const rules = r.triggered.length
+    ? `<ul class="list-group mb-3">${r.triggered.map(t => `<li class="list-group-item list-group-item-warning"><i class="bi bi-exclamation-triangle"></i> ${esc(t)}</li>`).join("")}</ul>`
+    : `<p class="text-success"><i class="bi bi-check2"></i> No suspicious characteristics detected by the rule engine.</p>`;
+  const feats = FEATURES.map(k => `<tr><td>${k}</td><td>${r.features[k]}</td></tr>`).join("");
+  out.innerHTML = `
+  <div class="card shadow-sm mb-4 border-${danger ? "danger" : "success"}">
+    <div class="card-header fw-semibold">Scan Result</div>
+    <div class="card-body">
+      <div class="alert alert-${danger ? "danger" : "success"} mb-3">
+        <h2 class="h4 mb-1">${danger ? '<i class="bi bi-exclamation-octagon"></i> DANGER — likely phishing website'
+                                     : '<i class="bi bi-check-circle"></i> SAFE — website appears legitimate'}</h2>
+        <div class="small text-break">${esc(r.url)}</div>
+        ${r.ruleOverride ? '<div class="small mt-1"><i class="bi bi-info-circle"></i> The cybersecurity rule engine overrode the model estimate.</div>' : ""}
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-md-4"><div class="border rounded p-3 h-100">
+          <div class="text-muted small">Model estimate confidence</div>
+          <div class="fs-4 fw-semibold">${(r.confidence * 100).toFixed(2)}%</div>
+          <div class="progress" style="height:6px"><div class="progress-bar bg-${danger ? "danger" : "success"}" style="width:${r.confidence * 100}%"></div></div>
+          <div class="small text-muted mt-1">Model estimate: ${r.mlPrediction ? "Phishing" : "Legitimate"}</div>
+        </div></div>
+        <div class="col-md-4"><div class="border rounded p-3 h-100">
+          <div class="text-muted small">Risk level</div>
+          <div class="fs-4"><span class="badge bg-${rc}">${r.riskLevel}</span></div>
+        </div></div>
+        <div class="col-md-4"><div class="border rounded p-3 h-100">
+          <div class="text-muted small">Rule engine score</div>
+          <div class="fs-4 fw-semibold">${r.riskScore}</div>
+        </div></div>
+      </div>
+      <h3 class="h6">Security indicators</h3>
+      ${rules}
+      <details><summary class="small">Extracted URL features</summary>
+        <table class="table table-sm table-bordered mt-2 small"><thead class="table-light"><tr><th>Feature</th><th>Value</th></tr></thead><tbody>${feats}</tbody></table>
+      </details>
+    </div>
+  </div>`;
+});
+
+/* ---------------- history ---------------- */
+function renderHistory() {
+  const list = (store.get("pd_history", {})[currentUser()] || []);
+  const body = document.getElementById("historyBody");
+  if (!list.length) { body.innerHTML = '<p class="text-muted">You have not scanned any URLs yet.</p>'; return; }
+  body.innerHTML = `<div class="table-responsive"><table class="table table-striped table-hover align-middle">
+    <thead class="table-dark"><tr><th>#</th><th>Date</th><th>URL</th><th>Prediction</th><th>Confidence</th><th>Risk</th><th>Rule Score</th></tr></thead><tbody>
+    ${list.map((s, i) => `<tr><td>${i + 1}</td><td class="text-nowrap">${new Date(s.date).toLocaleString()}</td>
+      <td class="text-break">${esc(s.url)}</td>
+      <td><span class="badge bg-${s.label === "DANGER" ? "danger" : "success"}">${s.label}</span></td>
+      <td>${(s.confidence * 100).toFixed(2)}%</td><td>${s.risk}</td><td>${s.score}</td></tr>`).join("")}
+    </tbody></table></div>`;
+}
+document.getElementById("clearHistory").addEventListener("click", () => {
+  const all = store.get("pd_history", {}); delete all[currentUser()]; store.set("pd_history", all); renderHistory();
+});
+
+show(currentUser() ? "scanner" : "login");
+</script>
+</body>
+</html>
